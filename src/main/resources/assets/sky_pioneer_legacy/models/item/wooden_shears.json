@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "sky_pioneer_legacy:item/wooden_shears"
+  }
+}
