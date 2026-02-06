@@ -1,0 +1,6 @@
+{
+    "parent": "minecraft:item/generated",
+    "textures": {
+        "layer0": "sky_pioneer_legacy:item/grass_ash"
+    }
+}
