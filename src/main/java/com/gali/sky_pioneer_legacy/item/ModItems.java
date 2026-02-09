@@ -1,8 +1,10 @@
 package com.gali.sky_pioneer_legacy.item;
 
 import com.gali.sky_pioneer_legacy.Sky_pioneer_legacy;
+import com.gali.sky_pioneer_legacy.block.ModBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.BoneMealItem;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ShearsItem;
 import net.neoforged.bus.api.IEventBus;
@@ -18,6 +20,9 @@ public class ModItems {
 
     public static final Supplier<Item> GRASS_ASH = ITEMS.register("grass_ash",
             () -> new BoneMealItem(new Item.Properties()));
+
+    public static final Supplier<Item> AURA_POWER = ITEMS.register("aura_power",
+            () -> new BlockItem(ModBlocks.AURA_POWER.get(), new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

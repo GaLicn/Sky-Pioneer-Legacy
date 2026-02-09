@@ -104,6 +104,10 @@ dependencies {
     implementation "curse.maven:cyclops-core-232758:7365285"
     implementation "curse.maven:common-capabilities-247007:7361876"
 
+    //自然灵气
+    implementation "curse.maven:patchouli-306770:6842247"
+    implementation "curse.maven:natures-aura-306626:6948833"
+
 
     implementation "curse.maven:jade-324717:6853386"
     implementation "curse.maven:jei-238222:7420587"
