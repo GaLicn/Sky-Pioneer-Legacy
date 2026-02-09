@@ -32,6 +32,11 @@ public class AuraPowerBlockEntity extends BlockEntity {
             return;
         }
 
+        int AuraCheck = IAuraChunk.getAuraInArea(level,pos,8);
+        if(AuraCheck <= 50000 ){
+            return;
+        }
+
         IAuraChunk.getAuraChunk(level, pos).drainAura(pos, AURA_PER_TICK);
         blockEntity.energyStorage.addEnergy(RF_PER_TICK);
         blockEntity.setChanged();
@@ -86,7 +91,7 @@ public class AuraPowerBlockEntity extends BlockEntity {
 
     private static class AuraEnergyStorage extends EnergyStorage {
         public AuraEnergyStorage() {
-            super(50000, 0, 128);
+            super(10000, 0, 128);
         }
 
         public void setEnergy(int energy) {
