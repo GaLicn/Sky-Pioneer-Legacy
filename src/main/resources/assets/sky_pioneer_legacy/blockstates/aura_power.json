@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "sky_pioneer_legacy:block/aura_power"
+    }
+  }
+}
