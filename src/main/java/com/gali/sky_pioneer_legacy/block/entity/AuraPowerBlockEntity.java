@@ -18,7 +18,7 @@ import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.EnergyStorage;
 
 public class AuraPowerBlockEntity extends BlockEntity {
-    private static final int AURA_PER_TICK = 1280;
+    private static final int AURA_PER_TICK = 128;
     private static final int RF_PER_TICK = 128;
     private static final int STRUCTURE_CHECK_INTERVAL = 20;
     private static final int EFFECT_POWDER_COLOR = 0xe00a3c;
