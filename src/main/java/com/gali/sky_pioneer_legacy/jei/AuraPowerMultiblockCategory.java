@@ -55,6 +55,7 @@ public class AuraPowerMultiblockCategory implements IRecipeCategory<AuraPowerMul
         return Component.translatable("jei." + Sky_pioneer_legacy.MODID + ".aura_power_multiblock");
     }
 
+    @SuppressWarnings("removal")
     @Override
     public IDrawable getBackground() {
         return background;
