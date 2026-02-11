@@ -38,7 +38,7 @@ public class AuraPowerBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
         if (level.isClientSide) {
-            return null;
+            return createTickerHelper(type, ModBlockEntities.AURA_POWER.get(), AuraPowerBlockEntity::clientTick);
         }
         return createTickerHelper(type, ModBlockEntities.AURA_POWER.get(), AuraPowerBlockEntity::tick);
     }

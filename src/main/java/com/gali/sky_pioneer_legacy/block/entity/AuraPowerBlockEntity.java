@@ -1,6 +1,7 @@
 package com.gali.sky_pioneer_legacy.block.entity;
 
 import com.gali.sky_pioneer_legacy.block.ModBlocks;
+import de.ellpeck.naturesaura.api.NaturesAuraAPI;
 import de.ellpeck.naturesaura.api.aura.chunk.IAuraChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,6 +13,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.EnergyStorage;
 
@@ -19,6 +21,7 @@ public class AuraPowerBlockEntity extends BlockEntity {
     private static final int AURA_PER_TICK = 1280;
     private static final int RF_PER_TICK = 128;
     private static final int STRUCTURE_CHECK_INTERVAL = 20;
+    private static final int EFFECT_POWDER_COLOR = 0xe00a3c;
     private static final Block ANCIENT_PLANKS = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("naturesaura", "ancient_planks"));
     private static final String[][] PATTERN = new String[][]{
             {"abcba"},
@@ -31,6 +34,7 @@ public class AuraPowerBlockEntity extends BlockEntity {
 
     private final AuraEnergyStorage energyStorage = new AuraEnergyStorage();
     private boolean formed;
+    private boolean lastRotated;
     private long lastStructureCheck = -1;
 
     public AuraPowerBlockEntity(BlockPos pos, BlockState state) {
@@ -63,6 +67,15 @@ public class AuraPowerBlockEntity extends BlockEntity {
         blockEntity.setChanged();
     }
 
+    public static void clientTick(Level level, BlockPos pos, BlockState state, AuraPowerBlockEntity blockEntity) {
+        if (!blockEntity.isStructureFormed(level, pos)) {
+            return;
+        }
+        if (level.getGameTime() % 5 == 0) {
+            blockEntity.spawnEffectPowderParticles(level, pos);
+        }
+    }
+
     private boolean isStructureFormed(Level level, BlockPos controllerPos) {
         long now = level.getGameTime();
         if (lastStructureCheck >= 0 && now - lastStructureCheck < STRUCTURE_CHECK_INTERVAL) {
@@ -74,7 +87,15 @@ public class AuraPowerBlockEntity extends BlockEntity {
     }
 
     private boolean checkStructure(Level level, BlockPos controllerPos) {
-        return checkStructure(level, controllerPos, false) || checkStructure(level, controllerPos, true);
+        if (checkStructure(level, controllerPos, false)) {
+            lastRotated = false;
+            return true;
+        }
+        if (checkStructure(level, controllerPos, true)) {
+            lastRotated = true;
+            return true;
+        }
+        return false;
     }
 
     private boolean checkStructure(Level level, BlockPos controllerPos, boolean rotated) {
@@ -98,6 +119,34 @@ public class AuraPowerBlockEntity extends BlockEntity {
             }
         }
         return true;
+    }
+
+    private void spawnEffectPowderParticles(Level level, BlockPos controllerPos) {
+        int sizeY = PATTERN.length;
+        int sizeZ = PATTERN[0].length;
+        int sizeX = PATTERN[0][0].length();
+        boolean rotated = this.lastRotated;
+        int width = rotated ? sizeZ : sizeX;
+        int depth = rotated ? sizeX : sizeZ;
+        BlockPos controllerOffset = rotated ? rotateOffset(CONTROLLER_OFFSET, sizeZ) : CONTROLLER_OFFSET;
+        BlockPos origin = controllerPos.subtract(controllerOffset);
+        double minX = origin.getX();
+        double minY = origin.getY();
+        double minZ = origin.getZ();
+        double maxX = minX + width;
+        double maxY = minY + sizeY;
+        double maxZ = minZ + depth;
+        AABB bounds = new AABB(minX, minY, minZ, maxX, maxY, maxZ);
+
+        double x = bounds.minX + level.random.nextDouble() * bounds.getXsize();
+        double y = bounds.minY + level.random.nextDouble() * bounds.getYsize();
+        double z = bounds.minZ + level.random.nextDouble() * bounds.getZsize();
+        NaturesAuraAPI.instance().spawnMagicParticle(
+            x, y, z,
+            level.random.nextGaussian() * 0.005F,
+            level.random.nextFloat() * 0.03F,
+            level.random.nextGaussian() * 0.005F,
+            EFFECT_POWDER_COLOR, level.random.nextFloat() * 3F + 1F, 120, 0F, true, true);
     }
 
     private boolean matchesKey(char key, BlockState state) {
