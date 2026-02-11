@@ -1,10 +1,15 @@
 package com.gali.sky_pioneer_legacy.block.entity;
 
+import com.gali.sky_pioneer_legacy.block.ModBlocks;
 import de.ellpeck.naturesaura.api.aura.chunk.IAuraChunk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.capabilities.Capabilities;
@@ -13,8 +18,20 @@ import net.neoforged.neoforge.energy.EnergyStorage;
 public class AuraPowerBlockEntity extends BlockEntity {
     private static final int AURA_PER_TICK = 1280;
     private static final int RF_PER_TICK = 128;
+    private static final int STRUCTURE_CHECK_INTERVAL = 20;
+    private static final Block ANCIENT_PLANKS = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("naturesaura", "ancient_planks"));
+    private static final String[][] PATTERN = new String[][]{
+            {"abcba"},
+            {"b   b"},
+            {"c d c"},
+            {"b   b"},
+            {"abcba"},
+    };
+    private static final BlockPos CONTROLLER_OFFSET = findControllerOffset();
 
     private final AuraEnergyStorage energyStorage = new AuraEnergyStorage();
+    private boolean formed;
+    private long lastStructureCheck = -1;
 
     public AuraPowerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.AURA_POWER.get(), pos, state);
@@ -22,6 +39,10 @@ public class AuraPowerBlockEntity extends BlockEntity {
 
     public static void tick(Level level, BlockPos pos, BlockState state, AuraPowerBlockEntity blockEntity) {
         if (level.isClientSide) {
+            return;
+        }
+
+        if (!blockEntity.isStructureFormed(level, pos)) {
             return;
         }
 
@@ -40,6 +61,73 @@ public class AuraPowerBlockEntity extends BlockEntity {
         IAuraChunk.getAuraChunk(level, pos).drainAura(pos, AURA_PER_TICK);
         blockEntity.energyStorage.addEnergy(RF_PER_TICK);
         blockEntity.setChanged();
+    }
+
+    private boolean isStructureFormed(Level level, BlockPos controllerPos) {
+        long now = level.getGameTime();
+        if (lastStructureCheck >= 0 && now - lastStructureCheck < STRUCTURE_CHECK_INTERVAL) {
+            return formed;
+        }
+        lastStructureCheck = now;
+        formed = checkStructure(level, controllerPos);
+        return formed;
+    }
+
+    private boolean checkStructure(Level level, BlockPos controllerPos) {
+        return checkStructure(level, controllerPos, false) || checkStructure(level, controllerPos, true);
+    }
+
+    private boolean checkStructure(Level level, BlockPos controllerPos, boolean rotated) {
+        int sizeZ = PATTERN[0].length;
+        BlockPos controllerOffset = rotated ? rotateOffset(CONTROLLER_OFFSET, sizeZ) : CONTROLLER_OFFSET;
+        BlockPos origin = controllerPos.subtract(controllerOffset);
+
+        for (int y = 0; y < PATTERN.length; y++) {
+            String[] layer = PATTERN[y];
+            for (int z = 0; z < layer.length; z++) {
+                String row = layer[z];
+                for (int x = 0; x < row.length(); x++) {
+                    char key = row.charAt(x);
+                    BlockPos offset = rotated ? new BlockPos(sizeZ - 1 - z, y, x) : new BlockPos(x, y, z);
+                    BlockPos checkPos = origin.offset(offset);
+                    BlockState checkState = level.getBlockState(checkPos);
+                    if (!matchesKey(key, checkState)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean matchesKey(char key, BlockState state) {
+        return switch (key) {
+            case 'a' -> state.is(ANCIENT_PLANKS);
+            case 'b' -> state.is(Blocks.GLASS);
+            case 'c' -> state.is(Blocks.REDSTONE_BLOCK);
+            case ' ' -> state.isAir();
+            case 'd' -> state.is(ModBlocks.AURA_POWER.get());
+            default -> false;
+        };
+    }
+
+    private static BlockPos findControllerOffset() {
+        for (int y = 0; y < PATTERN.length; y++) {
+            String[] layer = PATTERN[y];
+            for (int z = 0; z < layer.length; z++) {
+                String row = layer[z];
+                for (int x = 0; x < row.length(); x++) {
+                    if (row.charAt(x) == 'd') {
+                        return new BlockPos(x, y, z);
+                    }
+                }
+            }
+        }
+        return BlockPos.ZERO;
+    }
+
+    private static BlockPos rotateOffset(BlockPos offset, int sizeZ) {
+        return new BlockPos(sizeZ - 1 - offset.getZ(), offset.getY(), offset.getX());
     }
 
     private void pushEnergy(Level level) {
