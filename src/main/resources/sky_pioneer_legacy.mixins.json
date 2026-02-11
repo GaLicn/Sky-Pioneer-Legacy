@@ -4,6 +4,7 @@
   "package": "com.gali.sky_pioneer_legacy.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "integratedDynamics.BlockEntityDryingBasinMixin"
   ],
   "client": [
   ],
